@@ -2,9 +2,9 @@ import telebot
 import openai
 import time
 
-bot = telebot.TeleBot("<YOUR_TG_BOT_KEY_HERE>")
-openai.api_key = "<YOUR_OPEN_API_KEY_HERE>"
-model = "davinci:ft-personal:<YOUR_MODEL_HERE>"
+bot = telebot.TeleBot("6235663187:AAFEzS3TWiWHJd13urX07Srcw_jad5N5cIU")
+openai.api_key = "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"
+model = "text-davinci-003"
 stop_symbols = "###"
 
 users = {}

@@ -3,9 +3,9 @@ import openai
 import time
 from googletrans import Translator
 
-bot = telebot.TeleBot("<YOUR_TG_BOT_KEY_HERE>")
-openai.api_key = "<YOUR_OPEN_API_KEY_HERE>"
-model = "davinci:ft-personal:<YOUR_MODEL_HERE>"
+bot = telebot.TeleBot("6235663187:AAFEzS3TWiWHJd13urX07Srcw_jad5N5cIU")
+openai.api_key = "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"
+model = "text-davinci-003"
 stop_symbols = "###"
 
 translator = Translator()
@@ -20,50 +20,50 @@ def _get_user(id):
 
 
 def _process_rq(user_id, rq):
-    try {
-    user = _get_user(user_id)
-    last_text = user['last_text']
-    # if last prompt time > 10 minutes ago - drop context
-    if time.time() - user['last_prompt_time'] > 600:
-        last_text = ''
-        user['last_prompt_time'] = 0
-        user['last_text'] = ''
+    try:
+        user = _get_user(user_id)
+        last_text = user['last_text']
+        # if last prompt time > 10 minutes ago - drop context
+        if time.time() - user['last_prompt_time'] > 600:
+            last_text = ''
+            user['last_prompt_time'] = 0
+            user['last_text'] = ''
 
-    if rq and len(rq) > 0 and len(rq) < 1000:
-        inc_detect = translator.detect(rq)
-        if inc_detect.lang == 'ru':
-            eng_rq = translator.translate(rq, dest='en', src='ru').text
-            print(f">>> ({user_id}) {rq} -> {eng_rq}")
-            rq = eng_rq
-        else:
-            print(f">>> ({user_id}) {rq}")
+        if rq and len(rq) > 0 and len(rq) < 1000:
+            inc_detect = translator.detect(rq)
+            if inc_detect.lang == 'ru':
+                eng_rq = translator.translate(rq, dest='en', src='ru').text
+                print(f">>> ({user_id}) {rq} -> {eng_rq}")
+                rq = eng_rq
+            else:
+                print(f">>> ({user_id}) {rq}")
 
-        # truncate to 1000 symbols from the end
-        prompt = f"{last_text}Q: {rq} ->"[-1000:]
-        print("Sending to OpenAI: " + prompt)
-        completion = openai.Completion.create(
-            engine=model, prompt=prompt, max_tokens=256, stop=[stop_symbols], temperature=0.7)
-        eng_ans = completion['choices'][0]['text'].strip()
-        if "->" in eng_ans:
-            eng_ans = eng_ans.split("->")[0].strip()
-        ans = eng_ans
-        if inc_detect.lang == 'ru':
-            rus_ans = translator.translate(eng_ans, dest='ru', src='en').text
-            print(f"<<< ({user_id}) {ans} -> {rus_ans}")
-            ans = rus_ans
+            # truncate to 1000 symbols from the end
+            prompt = f"{last_text}Q: {rq} ->"[-1000:]
+            print("Sending to OpenAI: " + prompt)
+            completion = openai.Completion.create(
+                engine=model, prompt=prompt, max_tokens=256, stop=[stop_symbols], temperature=0.7)
+            eng_ans = completion['choices'][0]['text'].strip()
+            if "->" in eng_ans:
+                eng_ans = eng_ans.split("->")[0].strip()
+            ans = eng_ans
+            if inc_detect.lang == 'ru':
+                rus_ans = translator.translate(eng_ans, dest='ru', src='en').text
+                print(f"<<< ({user_id}) {ans} -> {rus_ans}")
+                ans = rus_ans
+            else:
+                print(f"<<< ({user_id}) {ans}")
+            user['last_text'] = prompt + " " + eng_ans + stop_symbols
+            user['last_prompt_time'] = time.time()
+            return ans
         else:
-            print(f"<<< ({user_id}) {ans}")
-        user['last_text'] = prompt + " " + eng_ans + stop_symbols
-        user['last_prompt_time'] = time.time()
-        return ans
-    else:
-        user['last_prompt_time'] = 0
-        user['last_text'] = ''
-        return "!!! Error! Please use simple short texts"
-    } catch (Exception e) {
+            user['last_prompt_time'] = 0
+            user['last_text'] = ''
+            return "!!! Error! Please use simple short texts"
+    except Exception as e:
         print(e)
-        retrun f"Error {e}"
-    }
+        return f"Error {e}"
+
 
 
 @bot.message_handler(commands=['start', 'help'])
